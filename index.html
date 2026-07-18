@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitcoin Rainbow Wave - Actual vs Predicted</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.5 9.5c.5-1 2-1.5 3-.5s1 2.5 0 3.5-2.5 1-3 0"/>
+        <path d="M12 7v2M12 15v2"/>
+      </svg>
+      <div>
+        <h1>Bitcoin Rainbow Wave</h1>
+        <p class="tagline">Actual price vs predicted cycle path</p>
+      </div>
+    </div>
+    <div class="live-price">
+      <div class="price-label">Live BTC/USD</div>
+      <div class="price-value" id="live-price">$63,947</div>
+      <div class="price-change up" id="live-change">+0.65%</div>
+      <div class="price-time" id="live-time">2026-07-18 12:51 UTC</div>
+    </div>
+  </header>
+
+  <nav class="controls">
+    <div class="control-group">
+      <label>Time range</label>
+      <div class="btn-group" id="range-btns">
+        <button data-range="all" class="active">All</button>
+        <button data-range="5y">5Y</button>
+        <button data-range="3y">3Y</button>
+        <button data-range="1y">1Y</button>
+        <button data-range="6m">6M</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Chart type</label>
+      <div class="btn-group" id="scale-btns">
+        <button data-scale="log" class="active">Log</button>
+        <button data-scale="linear">Linear</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <label>Show layers</label>
+      <div class="toggle-group">
+        <label class="toggle"><input type="checkbox" id="show-rainbow" checked><span>Rainbow</span></label>
+        <label class="toggle"><input type="checkbox" id="show-predicted" checked><span>Predicted</span></label>
+        <label class="toggle"><input type="checkbox" id="show-ath" checked><span>ATH markers</span></label>
+        <label class="toggle"><input type="checkbox" id="show-buyzone" checked><span>Buy zones</span></label>
+      </div>
+    </div>
+  </nav>
+
+  <main class="chart-section">
+    <div class="chart-container" id="chart-container">
+      <svg id="main-chart" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="rainbowGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.18"/>
+            <stop offset="15%" stop-color="#f97316" stop-opacity="0.15"/>
+            <stop offset="30%" stop-color="#eab308" stop-opacity="0.12"/>
+            <stop offset="45%" stop-color="#84cc16" stop-opacity="0.10"/>
+            <stop offset="60%" stop-color="#22c55e" stop-opacity="0.08"/>
+            <stop offset="75%" stop-color="#3b82f6" stop-opacity="0.08"/>
+            <stop offset="90%" stop-color="#a855f7" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.12"/>
+          </linearGradient>
+          <clipPath id="chartClip"><rect x="70" y="30" width="980" height="390"/></clipPath>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <g id="grid-group"></g>
+        <g id="rainbow-group" clip-path="url(#chartClip)"></g>
+        <g id="predicted-group" clip-path="url(#chartClip)"></g>
+        <g id="actual-group" clip-path="url(#chartClip)"></g>
+        <g id="markers-group"></g>
+        <g id="current-dot-group"></g>
+        <g id="hover-line-group"></g>
+        <g id="axes-group"></g>
+      </svg>
+      <div class="chart-tooltip" id="chart-tooltip">
+        <div class="tt-header" id="tt-header">-</div>
+        <div class="tt-row"><span class="tt-label">Actual</span><span class="tt-value" id="tt-actual">-</span></div>
+        <div class="tt-row"><span class="tt-label">Predicted</span><span class="tt-value" id="tt-predicted">-</span></div>
+        <div class="tt-row"><span class="tt-label">Diff</span><span class="tt-value" id="tt-diff">-</span></div>
+        <div class="tt-row"><span class="tt-label">Zone</span><span class="tt-value" id="tt-zone">-</span></div>
+      </div>
+    </div>
+  </main>
+
+  <section class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#ef4444">&#9679;</div>
+      <div class="stat-label">2017 ATH</div>
+      <div class="stat-value">$19,783</div>
+      <div class="stat-sub">Dec 2017</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#f97316">&#9679;</div>
+      <div class="stat-label">2021 ATH</div>
+      <div class="stat-value">$69,000</div>
+      <div class="stat-sub">Nov 2021</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#eab308">&#9679;</div>
+      <div class="stat-label">2025 predicted ATH</div>
+      <div class="stat-value">$126,000</div>
+      <div class="stat-sub">Expected May 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#22c55e">&#9679;</div>
+      <div class="stat-label">2025 actual ATH</div>
+      <div class="stat-value">$109,035</div>
+      <div class="stat-sub">May 19, 2025</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="color:#3b82f6">&#9679;</div>
+      <div class="stat-label">2027 predicted ATH</div>
+      <div class="stat-value">$440,000</div>
+      <div class="stat-sub">Expected Oct 2027</div>
+    </div>
+    <div class="stat-card highlight">
+      <div class="stat-icon" style="color:#a855f7">&#9679;</div>
+      <div class="stat-label">Current price</div>
+      <div class="stat-value" id="stat-current">$63,947</div>
+      <div class="stat-sub" id="stat-zone">Buy zone 2026</div>
+    </div>
+  </section>
+
+  <section class="analysis">
+    <h2>Cycle analysis</h2>
+    <div class="analysis-grid">
+      <div class="analysis-card">
+        <h3>2025 cycle review</h3>
+        <p>The 2025 predicted ATH was <strong>$126,000</strong>, but the actual peak reached only <strong>$109,035</strong> (May 19, 2025). This represents a <span class="down">-13.5%</span> miss vs prediction. The cycle still followed the general rainbow wave pattern but with lower amplitude.</p>
+      </div>
+      <div class="analysis-card">
+        <h3>Current position</h3>
+        <p>At <strong>$63,947</strong>, BTC sits at the upper edge of the predicted <strong>Buy Zone 2026</strong> (~$61,343). Historically, buy zones have marked excellent accumulation periods before the next bull run.</p>
+      </div>
+      <div class="analysis-card">
+        <h3>2027 outlook</h3>
+        <p>If the rainbow wave model holds, the next cycle ATH targets <strong>$440,000</strong> around October 2027. From current levels, this implies a <span class="up">+588%</span> potential upside. Past cycles have averaged ~4x from buy zone to ATH.</p>
+      </div>
+      <div class="analysis-card">
+        <h3>Risk factors</h3>
+        <p>Key risks include: regulatory changes, macro liquidity tightening, exchange failures, and diminishing returns as market cap grows. The 2025 underperformance suggests the model may be losing accuracy at higher price levels.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="app-footer">
+    <p>Data sources: Yahoo Finance, Binance | Predicted path based on Bitcoin Rainbow Wave model | Not financial advice</p>
+    <p class="footer-links">
+      <a href="https://github.com" target="_blank">GitHub</a> &middot;
+      <a href="#" id="export-btn">Export data (CSV)</a> &middot;
+      <a href="#" id="refresh-btn">Refresh data</a>
+    </p>
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

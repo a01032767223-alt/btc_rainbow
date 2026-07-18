@@ -1,0 +1,25 @@
+{
+  "name": "btc-rainbow-wave",
+  "version": "1.0.0",
+  "description": "Bitcoin Rainbow Wave - Actual price vs predicted cycle path",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "bitcoin",
+    "btc",
+    "rainbow-wave",
+    "cryptocurrency",
+    "trading",
+    "chart",
+    "visualization"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.0.0"
+  }
+}
