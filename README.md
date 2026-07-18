@@ -1,91 +1,109 @@
-# Bitcoin Rainbow Wave - Actual vs Predicted
+# Bitcoin Rainbow Wave - 실제 가격 vs 예측 경로
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A fully client-side interactive web application that overlays **actual Bitcoin price data** onto the famous **Bitcoin Rainbow Wave** predicted cycle model.
+비트코인의 실제 가격을 **Bitcoin Rainbow Wave(할빙 가격 회귀)** 모델의 예측 경로와 비교하는 완전 클라이언트 사이드 인터랙티브 웹 앱입니다.
 
-![Bitcoin Rainbow Wave](screenshot.png)
+## 기능
 
-## Features
+- **실제 가격 오버레이**: 2017년부터 현재까지의 주간 BTC/USD 종가를 Rainbow Wave 예측 곡선 위에 표시
+- **로그/선형 스케일 전환**: 가격 스케일을 로그 또는 선형으로 전환
+- **시간 범위 선택**: 전체 / 5년 / 3년 / 1년 / 6개월
+- **레이어 제어**: Rainbow 밴드, 예측 경로, ATH 마커, Buy Zone 개별 ON/OFF
+- **인터랙티브 툴팁**: 마우스 오버 시 실제가격·예측가격·편차·존 표시
+- **사이클 분석 카드**: 각 주요 사이클(2017, 2021, 2025, 2027) 인사이트
+- **다크모드 지원**: 시스템 설정 자동 감지
+- **CSV 내보내기**: 전체 데이터 다운로드
+- **반응형 디자인**: 데스크톱/태블릿/모바일 대응
 
-- **Real price overlay**: Actual weekly BTC/USD closes from 2017 to present, overlaid on the predicted Rainbow Wave path
-- **Log / Linear scale toggle**: Switch between logarithmic and linear price scales
-- **Time range selector**: View All, 5Y, 3Y, 1Y, or 6M windows
-- **Layer controls**: Toggle rainbow bands, predicted path, ATH markers, and buy zones
-- **Interactive tooltip**: Hover over any point to see actual vs predicted price, difference, and current rainbow zone
-- **Cycle analysis cards**: Key insights for each major cycle (2017, 2021, 2025, 2027)
-- **Dark mode support**: Automatic light/dark theme based on system preference
-- **CSV export**: Download all data with predicted values and zone classifications
-- **Responsive design**: Works on desktop, tablet, and mobile
+## 라이브 데모
 
-## Live Demo
+`index.html`을 브라우저로 열면 바로 실행됩니다. 서버가 필요 없습니다.
 
-Open `index.html` in any modern browser. No server required - it's 100% client-side.
+## 데이터 출처
 
-## Data Sources
+| 출처 | 데이터 | 기간 |
+|------|------|------|
+| Yahoo Finance | BTC-USD 주간 OHLCV | 2024-2026 |
+| Binance | BTCUSDT 주간 종가 | 2025-2026 |
+| 역사 데이터 | 근사 주간 종가 | 2017-2024 |
 
-| Source | Data | Period |
-|--------|------|--------|
-| Yahoo Finance | BTC-USD weekly OHLCV | 2024-2026 |
-| Binance | BTCUSDT weekly closes | 2025-2026 |
-| Historical | Approximate weekly closes | 2017-2024 |
-
-## File Structure
+## 파일 구조
 
 ```
 .
-├── index.html          # Main HTML page
-├── style.css           # All styling (light/dark mode)
-├── app.js              # Application logic & chart rendering
-├── data.js             # Embedded BTC price data & model parameters
-├── btc_full_data.json  # Raw combined data (for reference)
-└── README.md           # This file
+├── index.html          # 메인 페이지 (단일 파일로 모든 기능 포함)
+├── README.md           # 설명서
+└── LICENSE             # MIT 라이선스
 ```
 
-## How the Rainbow Wave Model Works
+## Rainbow Wave 모델이란?
 
-The Bitcoin Rainbow Wave is a logarithmic regression model that attempts to predict Bitcoin's long-term price trajectory based on historical halving cycles:
+Bitcoin Rainbow Wave는 비트코인의 장기 가격 궤적을 예측하는 **로그 회귀 모델**입니다:
 
-| Cycle | Predicted ATH | Actual ATH | Status |
-|-------|--------------|------------|--------|
-| 2017 | ~$20k | $19,783 | Matched |
-| 2021 | ~$70k | $69,000 | Matched |
-| 2025 | $126,000 | $109,035 | Underperformed (-13.5%) |
-| 2027 | $440,000 | TBD | Pending |
+**할빙 가격 회귀(HPR) 공식:**
+```
+log10(가격) = 2.6521 × ln(일수) - 18.163
+```
 
-## Rainbow Zones
+*제네시스 블록(2009-01-09)부터의 일수를 기준으로 계산*
 
-The chart divides price action into 8 colored zones:
+| 사이클 | 예측 ATH | 실제 ATH | 상태 |
+|--------|----------|----------|------|
+| 2017 | ~$20k | $19,783 | 일치 |
+| 2021 | ~$70k | $69,000 | 일치 |
+| 2025 | $126,000 | $109,035 | 하회 (-13.5%) |
+| 2027 | $440,000 | 미정 | 대기 중 |
 
-| Zone | Color | Action |
-|------|-------|--------|
-| Maximum bubble territory | Red | Sell |
-| Sell. Seriously, sell | Orange | Sell |
-| FOMO intensifies | Yellow | Caution |
-| Is this a bubble? | Lime | Hold |
-| Still cheap | Green | Hold |
-| Accumulate | Blue | Buy |
-| Buy! | Purple | Strong buy |
-| Fire sale! | Deep purple | Maximum buy |
+## Rainbow Zone (8개 구간)
 
-## Current Position (2026-07-18)
+| 존 | 색상 | 행동 |
+|----|------|------|
+| Maximum bubble territory | 빨강 | 매도 |
+| Sell. Seriously, sell | 주황 | 매도 |
+| FOMO intensifies | 노랑 | 주의 |
+| Is this a bubble? | 라임 | 보유 |
+| Still cheap | 초록 | 보유 |
+| Accumulate | 파랑 | 매수 |
+| Buy! | 보라 | 강력 매수 |
+| Fire sale! | 진보라 | 최대 매수 |
 
-- **Current Price**: $63,947
-- **Predicted Buy Zone 2026**: ~$61,343
-- **Position**: Upper edge of Buy Zone 2026
-- **Next Target (2027 ATH)**: $440,000 (+588% potential)
+## 현재 위치 (2026-07-18)
 
-## Browser Support
+- **현재 가격**: $63,947
+- **예측 Buy Zone**: $60,076 ~ $120,152 (HPR 추세선 기준)
+- **위치**: "Buy!" 존 상단
+- **다음 목표 (2027 ATH)**: $440,000 (+588% 잠재 상승 여력)
+
+## 사이클 분석
+
+### 2025 사이클 리뷰
+
+2025년 예측 ATH는 **$126,000**이었으나, 실제 고점은 **$109,035** (2025년 5월 19일)에 그쳤습니다. 이는 예측 대비 **-13.5%** 하회입니다. 사이클은 전반적인 Rainbow Wave 패턴을 따랐지만 진폭은 작았습니다.
+
+### 현재 위치
+
+**$63,947**에서 BTC는 할빙 가격 회귀 모델의 **"Buy!"** 존에 위치합니다. 역사적으로 Buy Zone은 다음 상승장 이전의 훌륭한 누적 기간을 표시했습니다.
+
+### 2027 전망
+
+HPR 모델이 유지된다면, 다음 사이클 ATH는 2027년 10월경 **$440,000**을 목표로 합니다. 현재 수준에서 이는 **+588%**의 잠재적 상승 여력을 의미합니다.
+
+### 리스크 요인
+
+주요 리스크로는 규제 변화, 거시 유동성 긴축, 거래소 실패, 시가총액 증가에 따른 수익률 감소 등이 있습니다. 2025년의 저조한 성과는 모델이 더 높은 가격 수준에서 정확도를 잃어가고 있음을 시사합니다.
+
+## 브라우저 지원
 
 - Chrome 90+
 - Firefox 88+
 - Safari 14+
 - Edge 90+
 
-## License
+## 라이선스
 
-MIT License - feel free to use, modify, and distribute.
+MIT License - 자유롭게 사용, 수정, 배포 가능합니다.
 
-## Disclaimer
+## 면책 조항
 
-This is a data visualization tool for educational purposes only. It is **not financial advice**. Cryptocurrency investments carry significant risk. Past performance does not guarantee future results.
+본 도구는 교육 목적의 데이터 시각화 도구입니다. **투자 조언이 아닙니다.** 암호화폐 투자에는 상당한 위험이 따르며, 과거 성과가 미래 결과를 보장하지 않습니다.

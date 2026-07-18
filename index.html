@@ -4,34 +4,100 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bitcoin Rainbow Wave - Actual vs Predicted</title>
-<link rel="stylesheet" href="style.css">
+<style>
+:root {
+  --bg: #f5f5f5; --card: #fff; --text: #111; --text2: #666; --text3: #999;
+  --border: #e5e5e5; --accent: #3b82f6; --green: #22c55e; --red: #ef4444;
+  --chart1: #3b82f6; --chart2: #ef4444; --chart4: #a855f7;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0a0a0a; --card: #141414; --text: #f0f0f0; --text2: #999; --text3: #666; --border: #222; }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.app { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+
+/* Header */
+.header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.header-left h1 { font-size: 22px; font-weight: 600; }
+.header-left p { font-size: 13px; color: var(--text3); }
+.header-right { text-align: right; }
+.header-right .price { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.header-right .change { font-size: 14px; font-weight: 500; }
+.header-right .change.up { color: var(--green); }
+.header-right .change.down { color: var(--red); }
+.header-right .time { font-size: 11px; color: var(--text3); }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; padding: 14px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+.control { display: flex; flex-direction: column; gap: 6px; }
+.control label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+.btns { display: flex; gap: 4px; }
+.btns button { padding: 6px 14px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: transparent; color: var(--text2); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.btns button:hover { background: var(--bg); color: var(--text); }
+.btns button.active { background: var(--text); color: var(--card); border-color: var(--text); }
+.toggles { display: flex; flex-wrap: wrap; gap: 12px; }
+.toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2); cursor: pointer; }
+.toggle input { width: 16px; height: 16px; accent-color: var(--text); }
+
+/* Chart */
+.chart-wrap { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
+#chart { display: block; width: 100%; height: auto; min-height: 400px; }
+.tooltip { position: absolute; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; font-size: 13px; pointer-events: none; opacity: 0; transition: opacity 0.12s; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 100; min-width: 200px; }
+.tooltip.show { opacity: 1; }
+.tooltip h4 { font-size: 14px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.tooltip-row { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 4px; }
+.tooltip-row .label { color: var(--text3); }
+.tooltip-row .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+.stat .dot { font-size: 18px; line-height: 1; margin-bottom: 4px; }
+.stat .label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+.stat .value { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat .sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* Analysis */
+.analysis { margin-bottom: 20px; }
+.analysis h2 { font-size: 18px; font-weight: 600; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.card h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.card p { font-size: 14px; color: var(--text2); line-height: 1.7; }
+.card .up { color: var(--green); font-weight: 600; }
+.card .down { color: var(--red); font-weight: 600; }
+
+/* Footer */
+.footer { text-align: center; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text3); }
+.footer a { color: var(--text2); text-decoration: none; }
+.footer a:hover { color: var(--text); }
+
+@media (max-width: 600px) {
+  .header { flex-direction: column; }
+  .header-right { text-align: left; }
+  .price { font-size: 26px !important; }
+}
+</style>
 </head>
 <body>
 <div class="app">
-  <header class="app-header">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <path d="M9.5 9.5c.5-1 2-1.5 3-.5s1 2.5 0 3.5-2.5 1-3 0"/>
-        <path d="M12 7v2M12 15v2"/>
-      </svg>
-      <div>
-        <h1>Bitcoin Rainbow Wave</h1>
-        <p class="tagline">Actual price vs predicted cycle path</p>
-      </div>
+  <div class="header">
+    <div class="header-left">
+      <h1>Bitcoin Rainbow Wave</h1>
+      <p>Actual price vs Halving Price Regression model</p>
     </div>
-    <div class="live-price">
-      <div class="price-label">Live BTC/USD</div>
-      <div class="price-value" id="live-price">$63,947</div>
-      <div class="price-change up" id="live-change">+0.65%</div>
-      <div class="price-time" id="live-time">2026-07-18 12:51 UTC</div>
+    <div class="header-right">
+      <div class="price" id="live-price">$63,947</div>
+      <div class="change up" id="live-change">+0.65%</div>
+      <div class="time">2026-07-18 12:51 UTC</div>
     </div>
-  </header>
+  </div>
 
-  <nav class="controls">
-    <div class="control-group">
+  <div class="controls">
+    <div class="control">
       <label>Time range</label>
-      <div class="btn-group" id="range-btns">
+      <div class="btns" id="range-btns">
         <button data-range="all" class="active">All</button>
         <button data-range="5y">5Y</button>
         <button data-range="3y">3Y</button>
@@ -39,133 +105,455 @@
         <button data-range="6m">6M</button>
       </div>
     </div>
-    <div class="control-group">
-      <label>Chart type</label>
-      <div class="btn-group" id="scale-btns">
+    <div class="control">
+      <label>Scale</label>
+      <div class="btns" id="scale-btns">
         <button data-scale="log" class="active">Log</button>
         <button data-scale="linear">Linear</button>
       </div>
     </div>
-    <div class="control-group">
-      <label>Show layers</label>
-      <div class="toggle-group">
-        <label class="toggle"><input type="checkbox" id="show-rainbow" checked><span>Rainbow</span></label>
-        <label class="toggle"><input type="checkbox" id="show-predicted" checked><span>Predicted</span></label>
-        <label class="toggle"><input type="checkbox" id="show-ath" checked><span>ATH markers</span></label>
-        <label class="toggle"><input type="checkbox" id="show-buyzone" checked><span>Buy zones</span></label>
+    <div class="control">
+      <label>Layers</label>
+      <div class="toggles">
+        <label class="toggle"><input type="checkbox" id="show-rainbow" checked> Rainbow</label>
+        <label class="toggle"><input type="checkbox" id="show-predicted" checked> Predicted</label>
+        <label class="toggle"><input type="checkbox" id="show-ath" checked> ATH</label>
+        <label class="toggle"><input type="checkbox" id="show-buyzone" checked> Buy zones</label>
       </div>
     </div>
-  </nav>
+  </div>
 
-  <main class="chart-section">
-    <div class="chart-container" id="chart-container">
-      <svg id="main-chart" viewBox="0 0 1100 480" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="rainbowGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ef4444" stop-opacity="0.18"/>
-            <stop offset="15%" stop-color="#f97316" stop-opacity="0.15"/>
-            <stop offset="30%" stop-color="#eab308" stop-opacity="0.12"/>
-            <stop offset="45%" stop-color="#84cc16" stop-opacity="0.10"/>
-            <stop offset="60%" stop-color="#22c55e" stop-opacity="0.08"/>
-            <stop offset="75%" stop-color="#3b82f6" stop-opacity="0.08"/>
-            <stop offset="90%" stop-color="#a855f7" stop-opacity="0.10"/>
-            <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.12"/>
-          </linearGradient>
-          <clipPath id="chartClip"><rect x="70" y="30" width="980" height="390"/></clipPath>
-          <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        </defs>
+  <div class="chart-wrap">
+    <svg id="chart" viewBox="0 0 1100 460" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <clipPath id="clip"><rect x="70" y="25" width="980" height="370"/></clipPath>
+        <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <g id="g-grid"></g>
+      <g id="g-rainbow" clip-path="url(#clip)"></g>
+      <g id="g-predicted" clip-path="url(#clip)"></g>
+      <g id="g-actual" clip-path="url(#clip)"></g>
+      <g id="g-markers"></g>
+      <g id="g-axes"></g>
+    </svg>
+    <div class="tooltip" id="tooltip">
+      <h4 id="tt-date">-</h4>
+      <div class="tooltip-row"><span class="label">Actual</span><span class="value" id="tt-actual">-</span></div>
+      <div class="tooltip-row"><span class="label">Predicted</span><span class="value" id="tt-predicted">-</span></div>
+      <div class="tooltip-row"><span class="label">Diff</span><span class="value" id="tt-diff">-</span></div>
+      <div class="tooltip-row"><span class="label">Zone</span><span class="value" id="tt-zone">-</span></div>
+      <div class="tooltip-row"><span class="label">Trend</span><span class="value" id="tt-trend">-</span></div>
+    </div>
+  </div>
 
-        <g id="grid-group"></g>
-        <g id="rainbow-group" clip-path="url(#chartClip)"></g>
-        <g id="predicted-group" clip-path="url(#chartClip)"></g>
-        <g id="actual-group" clip-path="url(#chartClip)"></g>
-        <g id="markers-group"></g>
-        <g id="current-dot-group"></g>
-        <g id="hover-line-group"></g>
-        <g id="axes-group"></g>
-      </svg>
-      <div class="chart-tooltip" id="chart-tooltip">
-        <div class="tt-header" id="tt-header">-</div>
-        <div class="tt-row"><span class="tt-label">Actual</span><span class="tt-value" id="tt-actual">-</span></div>
-        <div class="tt-row"><span class="tt-label">Predicted</span><span class="tt-value" id="tt-predicted">-</span></div>
-        <div class="tt-row"><span class="tt-label">Diff</span><span class="tt-value" id="tt-diff">-</span></div>
-        <div class="tt-row"><span class="tt-label">Zone</span><span class="tt-value" id="tt-zone">-</span></div>
-      </div>
-    </div>
-  </main>
+  <div class="stats">
+    <div class="stat"><div class="dot" style="color:#ef4444">&#9679;</div><div class="label">2017 ATH</div><div class="value">$19,783</div><div class="sub">Dec 2017</div></div>
+    <div class="stat"><div class="dot" style="color:#f97316">&#9679;</div><div class="label">2021 ATH</div><div class="value">$69,000</div><div class="sub">Nov 2021</div></div>
+    <div class="stat"><div class="dot" style="color:#eab308">&#9679;</div><div class="label">2025 predicted</div><div class="value">$126,000</div><div class="sub">Expected</div></div>
+    <div class="stat"><div class="dot" style="color:#22c55e">&#9679;</div><div class="label">2025 actual</div><div class="value">$109,035</div><div class="sub">May 19, 2025</div></div>
+    <div class="stat"><div class="dot" style="color:#3b82f6">&#9679;</div><div class="label">2027 predicted</div><div class="value">$440,000</div><div class="sub">Expected</div></div>
+    <div class="stat"><div class="dot" style="color:#a855f7">&#9679;</div><div class="label">Current</div><div class="value" id="stat-current">$63,947</div><div class="sub" id="stat-zone">Buy zone</div></div>
+  </div>
 
-  <section class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#ef4444">&#9679;</div>
-      <div class="stat-label">2017 ATH</div>
-      <div class="stat-value">$19,783</div>
-      <div class="stat-sub">Dec 2017</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#f97316">&#9679;</div>
-      <div class="stat-label">2021 ATH</div>
-      <div class="stat-value">$69,000</div>
-      <div class="stat-sub">Nov 2021</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#eab308">&#9679;</div>
-      <div class="stat-label">2025 predicted ATH</div>
-      <div class="stat-value">$126,000</div>
-      <div class="stat-sub">Expected May 2025</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#22c55e">&#9679;</div>
-      <div class="stat-label">2025 actual ATH</div>
-      <div class="stat-value">$109,035</div>
-      <div class="stat-sub">May 19, 2025</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="color:#3b82f6">&#9679;</div>
-      <div class="stat-label">2027 predicted ATH</div>
-      <div class="stat-value">$440,000</div>
-      <div class="stat-sub">Expected Oct 2027</div>
-    </div>
-    <div class="stat-card highlight">
-      <div class="stat-icon" style="color:#a855f7">&#9679;</div>
-      <div class="stat-label">Current price</div>
-      <div class="stat-value" id="stat-current">$63,947</div>
-      <div class="stat-sub" id="stat-zone">Buy zone 2026</div>
-    </div>
-  </section>
-
-  <section class="analysis">
+  <div class="analysis">
     <h2>Cycle analysis</h2>
     <div class="analysis-grid">
-      <div class="analysis-card">
+      <div class="card">
         <h3>2025 cycle review</h3>
         <p>The 2025 predicted ATH was <strong>$126,000</strong>, but the actual peak reached only <strong>$109,035</strong> (May 19, 2025). This represents a <span class="down">-13.5%</span> miss vs prediction. The cycle still followed the general rainbow wave pattern but with lower amplitude.</p>
       </div>
-      <div class="analysis-card">
+      <div class="card">
         <h3>Current position</h3>
-        <p>At <strong>$63,947</strong>, BTC sits at the upper edge of the predicted <strong>Buy Zone 2026</strong> (~$61,343). Historically, buy zones have marked excellent accumulation periods before the next bull run.</p>
+        <p>At <strong>$63,947</strong>, BTC sits in the <strong>"Buy!"</strong> zone of the Halving Price Regression model. Historically, buy zones have marked excellent accumulation periods before the next bull run.</p>
       </div>
-      <div class="analysis-card">
+      <div class="card">
         <h3>2027 outlook</h3>
-        <p>If the rainbow wave model holds, the next cycle ATH targets <strong>$440,000</strong> around October 2027. From current levels, this implies a <span class="up">+588%</span> potential upside. Past cycles have averaged ~4x from buy zone to ATH.</p>
+        <p>If the HPR model holds, the next cycle ATH targets <strong>$440,000</strong> around October 2027. From current levels, this implies a <span class="up">+588%</span> potential upside.</p>
       </div>
-      <div class="analysis-card">
+      <div class="card">
         <h3>Risk factors</h3>
-        <p>Key risks include: regulatory changes, macro liquidity tightening, exchange failures, and diminishing returns as market cap grows. The 2025 underperformance suggests the model may be losing accuracy at higher price levels.</p>
+        <p>Key risks include: regulatory changes, macro liquidity tightening, exchange failures, and diminishing returns as market cap grows. The 2025 underperformance suggests the model may be losing accuracy.</p>
       </div>
     </div>
-  </section>
+  </div>
 
-  <footer class="app-footer">
-    <p>Data sources: Yahoo Finance, Binance | Predicted path based on Bitcoin Rainbow Wave model | Not financial advice</p>
-    <p class="footer-links">
-      <a href="https://github.com" target="_blank">GitHub</a> &middot;
-      <a href="#" id="export-btn">Export data (CSV)</a> &middot;
-      <a href="#" id="refresh-btn">Refresh data</a>
-    </p>
-  </footer>
+  <div class="footer">
+    <p>Data: Yahoo Finance, Binance | Model: Halving Price Regression (log10(price) = 2.6521&times;ln(days) &minus; 18.163)</p>
+    <p><a href="#" id="export-csv">Export CSV</a> &middot; <a href="#" id="refresh">Refresh</a></p>
+  </div>
 </div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script>
+// ===== DATA =====
+const BTC_DATA = [
+  {d:"2017-01-02",p:998},{d:"2017-04-03",p:1093},{d:"2017-07-03",p:2488},{d:"2017-10-02",p:4403},
+  {d:"2017-12-11",p:17400},{d:"2017-12-18",p:19140},{d:"2018-01-01",p:13412},{d:"2018-04-02",p:6847},
+  {d:"2018-07-02",p:6350},{d:"2018-10-01",p:6576},{d:"2018-12-10",p:3237},{d:"2019-01-07",p:4025},
+  {d:"2019-04-01",p:4140},{d:"2019-07-01",p:10800},{d:"2019-10-07",p:8200},{d:"2020-01-06",p:7769},
+  {d:"2020-04-06",p:7279},{d:"2020-07-06",p:9373},{d:"2020-10-05",p:10600},{d:"2020-12-21",p:23777},
+  {d:"2021-01-04",p:31982},{d:"2021-04-05",p:59057},{d:"2021-07-05",p:35287},{d:"2021-10-04",p:49236},
+  {d:"2021-11-08",p:67566},{d:"2022-01-03",p:46458},{d:"2022-04-04",p:45829},{d:"2022-07-04",p:20250},
+  {d:"2022-10-03",p:19042},{d:"2022-11-14",p:16547},{d:"2023-01-02",p:16688},{d:"2023-04-03",p:27835},
+  {d:"2023-07-03",p:30500},{d:"2023-10-02",p:27900},{d:"2024-01-01",p:42265},{d:"2024-04-01",p:69700},
+  {d:"2024-07-01",p:62800},{d:"2024-07-15",p:68155},{d:"2024-07-22",p:68256},{d:"2024-07-29",p:58117},
+  {d:"2024-08-05",p:58719},{d:"2024-08-12",p:58484},{d:"2024-08-19",p:64334},{d:"2024-08-26",p:57325},
+  {d:"2024-09-02",p:54842},{d:"2024-09-09",p:59183},{d:"2024-09-16",p:63649},{d:"2024-09-23",p:65635},
+  {d:"2024-09-30",p:62819},{d:"2024-10-07",p:62851},{d:"2024-10-14",p:69002},{d:"2024-10-21",p:67929},
+  {d:"2024-10-28",p:68741},{d:"2024-11-04",p:80474},{d:"2024-11-11",p:89846},{d:"2024-11-18",p:98014},
+  {d:"2024-11-25",p:97280},{d:"2024-12-02",p:101236},{d:"2024-12-09",p:104299},{d:"2024-12-16",p:95105},
+  {d:"2024-12-23",p:93530},{d:"2024-12-30",p:98315},{d:"2025-01-06",p:94488},{d:"2025-01-13",p:101090},
+  {d:"2025-01-20",p:102683},{d:"2025-01-27",p:97689},{d:"2025-02-03",p:96500},{d:"2025-02-10",p:96175},
+  {d:"2025-02-17",p:96274},{d:"2025-02-24",p:94248},{d:"2025-03-03",p:80601},{d:"2025-03-10",p:82580},
+  {d:"2025-03-17",p:86054},{d:"2025-03-24",p:82335},{d:"2025-03-31",p:78214},{d:"2025-04-07",p:83685},
+  {d:"2025-04-14",p:85174},{d:"2025-04-21",p:93755},{d:"2025-04-28",p:94316},{d:"2025-05-05",p:104106},
+  {d:"2025-05-12",p:106446},{d:"2025-05-19",p:109035},{d:"2025-05-26",p:105652},{d:"2025-06-02",p:105794},
+  {d:"2025-06-09",p:105552},{d:"2025-06-16",p:100987},{d:"2025-06-23",p:108386},{d:"2025-06-30",p:105000},
+  {d:"2025-07-07",p:108000},{d:"2025-07-14",p:112000},{d:"2025-07-21",p:119416},{d:"2025-07-28",p:114209},
+  {d:"2025-08-04",p:119294},{d:"2025-08-11",p:117405},{d:"2025-08-18",p:113494},{d:"2025-08-25",p:108246},
+  {d:"2025-09-01",p:111137},{d:"2025-09-08",p:115268},{d:"2025-09-15",p:115232},{d:"2025-09-22",p:112164},
+  {d:"2025-09-29",p:123482},{d:"2025-10-06",p:114959},{d:"2025-10-13",p:108643},{d:"2025-10-20",p:114559},
+  {d:"2025-10-27",p:110541},{d:"2025-11-03",p:104723},{d:"2025-11-10",p:94261},{d:"2025-11-17",p:86830},
+  {d:"2025-11-24",p:90360},{d:"2025-12-01",p:90395},{d:"2025-12-08",p:88172},{d:"2025-12-15",p:88659},
+  {d:"2025-12-22",p:87953},{d:"2025-12-29",p:91530},{d:"2026-01-05",p:91014},{d:"2026-01-12",p:93673},
+  {d:"2026-01-19",p:86670},{d:"2026-01-26",p:76968},{d:"2026-02-02",p:70330},{d:"2026-02-09",p:68833},
+  {d:"2026-02-16",p:67643},{d:"2026-02-23",p:65776},{d:"2026-03-02",p:65971},{d:"2026-03-09",p:72815},
+  {d:"2026-03-16",p:67859},{d:"2026-03-23",p:66011},{d:"2026-03-30",p:69034},{d:"2026-04-06",p:70741},
+  {d:"2026-04-13",p:73802},{d:"2026-04-20",p:78658},{d:"2026-04-27",p:78569},{d:"2026-05-04",p:82210},
+  {d:"2026-05-11",p:77458},{d:"2026-05-18",p:77065},{d:"2026-05-25",p:73674},{d:"2026-06-01",p:63332},
+  {d:"2026-06-08",p:65746},{d:"2026-06-15",p:63312},{d:"2026-06-22",p:59577},{d:"2026-06-29",p:63650},
+  {d:"2026-07-06",p:63780},{d:"2026-07-13",p:63947},{d:"2026-07-18",p:63947}
+];
+
+const ATH_MARKERS = [
+  {d:"2017-12-17",p:19783,label:"2017",ath:"$19.8k"},
+  {d:"2021-11-10",p:69000,label:"2021",ath:"$69k"},
+  {d:"2025-05-19",p:109035,label:"2025 actual",ath:"$109k"},
+];
+
+const BUY_ZONES = [
+  {d:"2018-12-10",p:3237,label:"Buy 2018"},
+  {d:"2022-11-14",p:15500,label:"Buy 2022"},
+  {d:"2026-07-18",p:63947,label:"Buy 2026"},
+];
+
+// Genesis: Jan 9, 2009
+const GENESIS = new Date("2009-01-09").getTime();
+
+function daysSinceGenesis(d) {
+  return (new Date(d+"T00:00:00").getTime() - GENESIS) / (1000*60*60*24);
+}
+
+function hprPrice(days) {
+  // Halving Price Regression: log10(price) = 2.6521 * ln(days) - 18.163
+  return Math.pow(10, 2.6521 * Math.log(days) - 18.163);
+}
+
+function getTrend(dateStr) {
+  return hprPrice(daysSinceGenesis(dateStr));
+}
+
+function getBands(dateStr) {
+  const trend = getTrend(dateStr);
+  return [
+    {min:trend*0.25, max:trend*0.5,  color:"#7c3aed", label:"Fire sale!", opacity:0.12},
+    {min:trend*0.5,  max:trend*1.0,  color:"#a855f7", label:"Buy!", opacity:0.10},
+    {min:trend*1.0,  max:trend*2.0,  color:"#3b82f6", label:"Accumulate", opacity:0.08},
+    {min:trend*2.0,  max:trend*4.0,  color:"#22c55e", label:"Still cheap", opacity:0.07},
+    {min:trend*4.0,  max:trend*8.0,  color:"#84cc16", label:"Is this a bubble?", opacity:0.06},
+    {min:trend*8.0,  max:trend*16.0, color:"#eab308", label:"FOMO intensifies", opacity:0.06},
+    {min:trend*16.0, max:trend*32.0, color:"#f97316", label:"Sell. Seriously, sell", opacity:0.07},
+    {min:trend*32.0, max:trend*64.0, color:"#ef4444", label:"Maximum bubble territory", opacity:0.08},
+  ];
+}
+
+function getZone(price, dateStr) {
+  for (const b of getBands(dateStr)) {
+    if (price >= b.min && price < b.max) return {label: b.label, color: b.color};
+  }
+  if (price >= getBands(dateStr)[7].max) return {label:"Maximum bubble territory", color:"#ef4444"};
+  return {label:"Fire sale!", color:"#7c3aed"};
+}
+
+// ===== CONFIG =====
+const W=1100, H=460, ML=70, MR=50, MT=25, MB=50;
+const CW=W-ML-MR, CH=H-MT-MB;
+
+let state = {range:"all", scale:"log", showRainbow:true, showPredicted:true, showAth:true, showBuyzone:true};
+let filtered = [];
+
+// ===== UTILS =====
+function $(id){return document.getElementById(id);}
+function fmt$(p){return "$"+Math.round(p).toLocaleString();}
+function fmtK$(p){return p>=1000?"$"+(p/1000).toFixed(p>=10000?0:1)+"k":"$"+p.toFixed(0);}
+
+function parseD(d){return new Date(d+"T00:00:00").getTime();}
+
+function filterData(){
+  const now = Date.now();
+  let ms;
+  switch(state.range){
+    case "6m": ms=180*86400000; break;
+    case "1y": ms=365*86400000; break;
+    case "3y": ms=3*365*86400000; break;
+    case "5y": ms=5*365*86400000; break;
+    default: filtered=BTC_DATA.slice(); return;
+  }
+  const cutoff = now - ms;
+  filtered = BTC_DATA.filter(x=>parseD(x.d)>=cutoff);
+}
+
+function getRange(){
+  let mn=Infinity, mx=-Infinity;
+  for(const d of filtered){
+    mn=Math.min(mn,d.p);
+    mx=Math.max(mx,d.p);
+    const trend=getTrend(d.d);
+    mn=Math.min(mn,trend*0.2);
+    mx=Math.max(mx,trend*70);
+  }
+  return {min:Math.max(mn*0.5,100), max:mx*1.3};
+}
+
+function sx(dateStr){
+  const t=(parseD(dateStr)-parseD(filtered[0].d))/(parseD(filtered[filtered.length-1].d)-parseD(filtered[0].d));
+  return ML+t*CW;
+}
+
+function sy(price,range){
+  if(state.scale==="log"){
+    const t=(Math.log10(price)-Math.log10(range.min))/(Math.log10(range.max)-Math.log10(range.min));
+    return MT+(1-t)*CH;
+  }
+  const t=(price-range.min)/(range.max-range.min);
+  return MT+(1-t)*CH;
+}
+
+function el(tag,attrs){
+  const e=document.createElementNS("http://www.w3.org/2000/svg",tag);
+  for(const k in attrs)e.setAttribute(k,attrs[k]);
+  return e;
+}
+
+// ===== RENDER =====
+function render(){
+  filterData();
+  if(filtered.length<2)return;
+  const range=getRange();
+
+  $("g-grid").innerHTML="";
+  $("g-rainbow").innerHTML="";
+  $("g-predicted").innerHTML="";
+  $("g-actual").innerHTML="";
+  $("g-markers").innerHTML="";
+  $("g-axes").innerHTML="";
+
+  // Grid
+  const gridPrices=state.scale==="log"
+    ?[1000,3000,10000,30000,100000,300000,1000000]
+    :[0,50000,100000,200000,300000,400000,500000,600000];
+  for(const p of gridPrices){
+    if(p<range.min||p>range.max)continue;
+    const y=sy(p,range);
+    $("g-grid").appendChild(el("line",{x1:ML,x2:W-MR,y1:y,y2:y,stroke:"var(--border)","stroke-width":0.5,"stroke-dasharray":"3,3"}));
+    const t=el("text",{x:W-MR+5,y:y+4,fill:"var(--text3)","font-size":10,"font-family":"inherit"});
+    t.textContent=fmtK$(p);
+    $("g-grid").appendChild(t);
+  }
+
+  // Rainbow bands
+  if(state.showRainbow){
+    // Draw bands for the date range
+    const startDays=daysSinceGenesis(filtered[0].d);
+    const endDays=daysSinceGenesis(filtered[filtered.length-1].d);
+    const stepDays=Math.max(1,Math.floor((endDays-startDays)/200));
+    const bands=getBands(filtered[0].d);
+    for(let i=0;i<bands.length;i++){
+      const b=bands[i];
+      let path="";
+      for(let days=startDays;days<=endDays;days+=stepDays){
+        const ds=new Date(GENESIS+days*86400000).toISOString().slice(0,10);
+        const trend=hprPrice(days);
+        const y1=sy(trend*Math.pow(2,i-2),range);
+        const y2=sy(trend*Math.pow(2,i-1),range);
+        // Simplified: draw horizontal-ish bands
+      }
+      // Better approach: draw rectangles across the chart
+      const yTop=sy(b.max,range);
+      const yBot=sy(b.min,range);
+      if(yBot-yTop>1){
+        const r=el("rect",{x:ML,y:yTop,width:CW,height:Math.max(1,yBot-yTop),fill:b.color,opacity:b.opacity});
+        $("g-rainbow").appendChild(r);
+      }
+    }
+    // Draw trend line
+    let trendPath="";
+    for(let days=startDays;days<=endDays;days+=stepDays){
+      const ds=new Date(GENESIS+days*86400000).toISOString().slice(0,10);
+      const trend=hprPrice(days);
+      if(trend<range.min||trend>range.max)continue;
+      const x=sx(ds);
+      const y=sy(trend,range);
+      trendPath+=(trendPath?" L":"M")+x+","+y;
+    }
+    if(trendPath){
+      $("g-rainbow").appendChild(el("path",{d:trendPath,fill:"none",stroke:"var(--text3)","stroke-width":1,"stroke-dasharray":"4,4",opacity:0.5}));
+    }
+  }
+
+  // Predicted path (HPR)
+  if(state.showPredicted){
+    let predPath="";
+    const startDays=daysSinceGenesis(filtered[0].d);
+    const endDays=daysSinceGenesis(filtered[filtered.length-1].d);
+    for(let days=startDays;days<=endDays;days+=Math.max(1,Math.floor((endDays-startDays)/300))){
+      const ds=new Date(GENESIS+days*86400000).toISOString().slice(0,10);
+      const p=hprPrice(days);
+      if(p<range.min||p>range.max)continue;
+      const x=sx(ds);
+      const y=sy(p,range);
+      predPath+=(predPath?" L":"M")+x+","+y;
+    }
+    if(predPath){
+      $("g-predicted").appendChild(el("path",{d:predPath,fill:"none",stroke:"var(--chart2)","stroke-width":1.5,"stroke-dasharray":"6,4",opacity:0.6}));
+    }
+  }
+
+  // Actual price
+  let actPath="";
+  for(let i=0;i<filtered.length;i++){
+    const pt=filtered[i];
+    const x=sx(pt.d);
+    const y=sy(pt.p,range);
+    actPath+=(i===0?"M":"L")+x+","+y;
+  }
+  $("g-actual").appendChild(el("path",{d:actPath,fill:"none",stroke:"var(--chart1)","stroke-width":2.5,"stroke-linejoin":"round"}));
+
+  // Area under curve
+  const last=filtered[filtered.length-1];
+  const first=filtered[0];
+  const areaPath=actPath+" L"+sx(last.d)+","+sy(range.min,range)+" L"+sx(first.d)+","+sy(range.min,range)+" Z";
+  $("g-actual").insertBefore(el("path",{d:areaPath,fill:"var(--chart1)",opacity:0.05}), $("g-actual").firstChild);
+
+  // Current dot
+  const lastX=sx(last.d), lastY=sy(last.p,range);
+  $("g-actual").appendChild(el("circle",{cx:lastX,cy:lastY,r:5,fill:"var(--chart1)",stroke:"white","stroke-width":2,filter:"url(#glow)"}));
+
+  // ATH markers
+  if(state.showAth){
+    for(const a of ATH_MARKERS){
+      const ad=parseD(a.d), f0=parseD(filtered[0].d), f1=parseD(filtered[filtered.length-1].d);
+      if(ad<f0||ad>f1)continue;
+      const x=sx(a.d), y=sy(a.p,range);
+      $("g-markers").appendChild(el("path",{d:`M${x},${y-15} L${x-4},${y-24} L${x+4},${y-24} Z`,fill:"var(--green)"}));
+      const t1=el("text",{x,y:y-28,"text-anchor":"middle",fill:"var(--text2)","font-size":11,"font-weight":600}); t1.textContent=a.label; $("g-markers").appendChild(t1);
+      const t2=el("text",{x,y:y-16,"text-anchor":"middle",fill:"var(--green)","font-size":10}); t2.textContent=a.ath; $("g-markers").appendChild(t2);
+    }
+  }
+
+  // Buy zone markers
+  if(state.showBuyzone){
+    for(const bz of BUY_ZONES){
+      const bzd=parseD(bz.d), f0=parseD(filtered[0].d), f1=parseD(filtered[filtered.length-1].d);
+      if(bzd<f0||bzd>f1)continue;
+      const x=sx(bz.d), y=sy(bz.p,range);
+      $("g-markers").appendChild(el("path",{d:`M${x},${y+15} L${x-4},${y+24} L${x+4},${y+24} Z`,fill:"var(--chart4)"}));
+      const t=el("text",{x,y:y+36,"text-anchor":"middle",fill:"var(--chart4)","font-size":10,"font-weight":600}); t.textContent=bz.label; $("g-markers").appendChild(t);
+    }
+  }
+
+  // Axes
+  const years=[];
+  const syear=new Date(filtered[0].d).getFullYear();
+  const eyear=new Date(filtered[filtered.length-1].d).getFullYear();
+  for(let y=syear;y<=eyear;y++)years.push(y);
+  for(const y of years){
+    const x=sx(y+"-01-01");
+    if(x<ML||x>W-MR)continue;
+    const t=el("text",{x,y:H-12,"text-anchor":"middle",fill:"var(--text3)","font-size":11}); t.textContent=y; $("g-axes").appendChild(t);
+  }
+  $("g-axes").appendChild(el("line",{x1:ML,x2:W-MR,y1:H-MB,y2:H-MB,stroke:"var(--border)","stroke-width":1}));
+  $("g-axes").appendChild(el("line",{x1:ML,x2:ML,y1:MT,y2:H-MB,stroke:"var(--border)","stroke-width":1}));
+
+  // Update stat
+  const zone=getZone(last.p,last.d);
+  $("stat-zone").textContent=zone.label;
+  $("stat-zone").style.color=zone.color;
+}
+
+// ===== TOOLTIP =====
+$("chart").addEventListener("mousemove",function(e){
+  const rect=$("chart").getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(W/rect.width);
+  const my=(e.clientY-rect.top)*(H/rect.height);
+  if(mx<ML||mx>W-MR||my<MT||my>H-MB){$("tooltip").classList.remove("show");return;}
+
+  let nearest=null, minDist=Infinity;
+  for(const pt of filtered){
+    const x=sx(pt.d);
+    const dist=Math.abs(x-mx);
+    if(dist<minDist){minDist=dist;nearest=pt;}
+  }
+
+  if(nearest&&minDist<25){
+    const pred=getTrend(nearest.d);
+    const diff=nearest.p-pred;
+    const diffPct=((diff/pred)*100).toFixed(1);
+    const zone=getZone(nearest.p,nearest.d);
+    $("tt-date").textContent=nearest.d;
+    $("tt-actual").textContent=fmt$(nearest.p);
+    $("tt-predicted").textContent=fmt$(pred);
+    const de=$("tt-diff");
+    de.textContent=(diff>=0?"+":"")+fmt$(diff)+" ("+diffPct+"%)";
+    de.style.color=diff>=0?"var(--green)":"var(--red)";
+    $("tt-zone").textContent=zone.label;
+    $("tt-zone").style.color=zone.color;
+    $("tt-trend").textContent=fmt$(pred);
+    $("tooltip").style.left=(e.clientX-rect.left+15)+"px";
+    $("tooltip").style.top=(e.clientY-rect.top-10)+"px";
+    $("tooltip").classList.add("show");
+  }else{
+    $("tooltip").classList.remove("show");
+  }
+});
+$("chart").addEventListener("mouseleave",()=>$("tooltip").classList.remove("show"));
+
+// ===== CONTROLS =====
+document.querySelectorAll("#range-btns button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#range-btns button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); state.range=b.dataset.range; render();
+  });
+});
+document.querySelectorAll("#scale-btns button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    document.querySelectorAll("#scale-btns button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); state.scale=b.dataset.scale; render();
+  });
+});
+$("show-rainbow").addEventListener("change",e=>{state.showRainbow=e.target.checked;render();});
+$("show-predicted").addEventListener("change",e=>{state.showPredicted=e.target.checked;render();});
+$("show-ath").addEventListener("change",e=>{state.showAth=e.target.checked;render();});
+$("show-buyzone").addEventListener("change",e=>{state.showBuyzone=e.target.checked;render();});
+
+$("export-csv").addEventListener("click",e=>{
+  e.preventDefault();
+  let csv="date,price,trend,zone\n";
+  for(const d of BTC_DATA){
+    const t=getTrend(d.d);
+    const z=getZone(d.p,d.d);
+    csv+=`${d.d},${d.p},${t.toFixed(2)},"${z.label}"\n`;
+  }
+  const blob=new Blob([csv],{type:"text/csv"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="btc_rainbow.csv"; a.click();
+  URL.revokeObjectURL(url);
+});
+
+$("refresh").addEventListener("click",e=>{e.preventDefault();location.reload();});
+
+// Init
+render();
+</script>
 </body>
 </html>
