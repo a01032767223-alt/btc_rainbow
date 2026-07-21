@@ -18,7 +18,7 @@
 <div class="card"><span>표시 데이터</span><strong id="count">—</strong><small>가격선과 밴드가 동일 좌표계 사용</small></div>
 </section>
 <section class="panel">
-<div class="head"><div><h2 style="margin:0 0 5px">통합 레인보우 차트</h2><div class="sub">검은색 선은 BTC 가격, 큰 원은 현재 위치입니다.</div></div><div class="controls"><button data-y="all" class="active">전체</button> <button data-y="10">10년</button> <button data-y="5">5년</button> <button data-y="2">2년</button></div></div>
+<div class="head"><div><h2 style="margin:0 0 5px">통합 레인보우 차트</h2><div class="sub">검은색 선은 BTC 가격, 큰 원은 현재 위치입니다.</div></div><div class="controls"><button data-y="all" class="active">전체</button> <button data-y="10">10년</button> <button data-y="5">5년</button> <button data-y="2">2년</button> <button data-y="1">1년</button> <span style="display:inline-block;width:8px"></span><button data-mode="line" class="active">가격선</button> <button data-mode="monthly">월봉</button></div></div>
 <div id="chartWrap"><svg id="chart" viewBox="0 0 1400 720" preserveAspectRatio="none" role="img" aria-label="레인보우 밴드 위에 겹쳐진 비트코인 장기 가격 차트"></svg><div id="tip" class="tip"></div></div>
 <div id="status" class="status">내장 데이터로 즉시 렌더링되며, 실시간 API 연결 성공 시 마지막 점이 자동 갱신됩니다.</div><div id="legend" class="legend"></div>
 </section>
@@ -31,43 +31,66 @@ const EDGES=[-0.65,-0.45,-0.25,-0.05,0.15,0.35,0.55,0.75,0.95,1.15];
 const BANDS=[
  ['Fire Sale','#5277c8','역사적 극저평가'],['BUY!','#4f99c7','강한 저평가'],['Accumulate','#55b8a6','분할매수 관심'],['Still Cheap','#79c98b','장기 추세 대비 낮음'],['HODL','#b7d978','중립·보유'],['Is this a bubble?','#f1dc77','낙관 확대'],['FOMO intensifies','#f5b36a','과열 주의'],['Sell. Seriously.','#ed7f55','강한 고평가'],['Maximum Bubble','#d83f3f','역사적 극과열']
 ];
-let current={date:new Date().toISOString().slice(0,10),price:118000,source:'내장 기준값'},years='all';
+let current={date:new Date().toISOString().slice(0,10),price:118000,source:'내장 기준값'},years='all',mode='line';
 const svg=document.getElementById('chart'),NS='http://www.w3.org/2000/svg';
 function E(n,a={},p=svg){const e=document.createElementNS(NS,n);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);p.appendChild(e);return e}
 function model(ms){const days=Math.max(1,(ms-ORIGIN)/864e5);return 10**(A+B*Math.log10(days))}
 function bandInfo(price,ms){const r=Math.log10(price/model(ms));let i=8;for(let j=0;j<9;j++){if(r<EDGES[j+1]){i=j;break}}return{ratio:price/model(ms),i}}
 function fmt(v){return new Intl.NumberFormat('ko-KR',{style:'currency',currency:'USD',maximumFractionDigits:v<100?2:0}).format(v)}
+function monthEndISO(ms){const d=new Date(ms);return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,0)).toISOString().slice(0,10)}
+function interpolateMonthly(points){
+ const sorted=points.slice().sort((a,b)=>a.date.localeCompare(b.date));
+ const out=[];
+ for(let i=0;i<sorted.length-1;i++){
+  const a=sorted[i],b=sorted[i+1],ta=Date.parse(a.date+'T00:00:00Z'),tb=Date.parse(b.date+'T00:00:00Z');
+  let cursor=new Date(Date.UTC(new Date(ta).getUTCFullYear(),new Date(ta).getUTCMonth()+1,0)).getTime();
+  while(cursor<tb){
+   const u=(cursor-ta)/(tb-ta);
+   const price=10**(Math.log10(a.price)+(Math.log10(b.price)-Math.log10(a.price))*u);
+   const date=monthEndISO(cursor);
+   if(!out.length||out[out.length-1].date!==date)out.push({date,price,estimated:true});
+   cursor=new Date(Date.UTC(new Date(cursor).getUTCFullYear(),new Date(cursor).getUTCMonth()+2,0)).getTime();
+  }
+ }
+ const last=sorted.at(-1);if(!out.length||out.at(-1).date!==last.date)out.push({...last});
+ return out;
+}
+
 function draw(){
  svg.innerHTML=''; const W=1400,H=720,L=84,R=34,T=24,BOT=62;
- const currentMs=Date.parse(current.date+'T00:00:00Z'); let minDate=Date.parse(HIST[0].date+'T00:00:00Z');
+ const currentMs=Date.parse(current.date+'T00:00:00Z'); const displayCurrentMs=mode==='monthly'?Date.parse(monthEndISO(currentMs)+'T00:00:00Z'):currentMs; let minDate=Date.parse(HIST[0].date+'T00:00:00Z');
  if(years!=='all'){const d=new Date(currentMs);d.setUTCFullYear(d.getUTCFullYear()-Number(years));minDate=d.getTime()}
- const data=HIST.filter(d=>Date.parse(d.date+'T00:00:00Z')>=minDate).map(d=>({...d}));
- data.push({date:current.date,price:current.price,current:true}); data.sort((a,b)=>a.date.localeCompare(b.date));
- const maxDate=currentMs;
+ let sourceData=mode==='monthly'?interpolateMonthly([...HIST,{date:current.date,price:current.price}]):HIST.map(d=>({...d}));
+ const data=sourceData.filter(d=>Date.parse(d.date+'T00:00:00Z')>=minDate).map(d=>({...d}));
+ const currentPoint={date:mode==='monthly'?monthEndISO(currentMs):current.date,price:current.price,current:true};
+ const same=data.findIndex(d=>d.date===currentPoint.date);if(same>=0)data.splice(same,1);data.push(currentPoint); data.sort((a,b)=>a.date.localeCompare(b.date));
+ const maxDate=displayCurrentMs;
  const samples=[];for(let t=minDate;t<=maxDate;t+=7*864e5)samples.push(t);if(samples.at(-1)!==maxDate)samples.push(maxDate);
  const allVals=[]; data.forEach(d=>allVals.push(d.price)); samples.forEach(t=>{allVals.push(model(t)*10**EDGES[0],model(t)*10**EDGES.at(-1))});
  const rawMin=Math.min(...allVals),rawMax=Math.max(...allVals); const yMin=10**(Math.floor(Math.log10(rawMin)*2)/2); const yMax=10**(Math.ceil(Math.log10(rawMax)*2)/2);
  const X=t=>L+(t-minDate)/(maxDate-minDate)*(W-L-R); const Y=v=>T+(Math.log10(yMax)-Math.log10(v))/(Math.log10(yMax)-Math.log10(yMin))*(H-T-BOT);
  // grid
  for(let p=Math.floor(Math.log10(yMin));p<=Math.ceil(Math.log10(yMax));p++){for(const m of [1,2,5]){const val=m*10**p;if(val<yMin||val>yMax)continue;const y=Y(val);E('line',{x1:L,y1:y,x2:W-R,y2:y,stroke:m===1?'#d7dce5':'#edf0f5','stroke-width':1});if(m===1){const tx=E('text',{x:L-10,y:y+4,fill:'#687386','text-anchor':'end','font-size':12});tx.textContent=val>=1e6?'$'+(val/1e6).toFixed(0)+'M':val>=1e3?'$'+(val/1e3).toFixed(0)+'k':'$'+val}}}
- const startY=new Date(minDate).getUTCFullYear(),endY=new Date(maxDate).getUTCFullYear(),step=years==='all'?2:1;
- for(let yr=startY;yr<=endY;yr+=step){const x=X(Date.parse(yr+'-01-01T00:00:00Z'));E('line',{x1:x,y1:T,x2:x,y2:H-BOT,stroke:'#eef1f5','stroke-width':1});const tx=E('text',{x,y:H-28,fill:'#687386','text-anchor':'middle','font-size':12});tx.textContent=yr}
+ const startY=new Date(minDate).getUTCFullYear(),endY=new Date(maxDate).getUTCFullYear();
+ if(years==='1'){for(let i=0;i<12;i++){const d=new Date(Date.UTC(new Date(maxDate).getUTCFullYear(),new Date(maxDate).getUTCMonth()-11+i,1));const x=X(d.getTime());E('line',{x1:x,y1:T,x2:x,y2:H-BOT,stroke:'#eef1f5','stroke-width':1});const tx=E('text',{x,y:H-28,fill:'#687386','text-anchor':'middle','font-size':12});tx.textContent=(d.getUTCMonth()+1)+'월'}}
+ else {const step=years==='all'?2:1;for(let yr=startY;yr<=endY;yr+=step){const x=X(Date.parse(yr+'-01-01T00:00:00Z'));E('line',{x1:x,y1:T,x2:x,y2:H-BOT,stroke:'#eef1f5','stroke-width':1});const tx=E('text',{x,y:H-28,fill:'#687386','text-anchor':'middle','font-size':12});tx.textContent=yr}}
  // Rainbow polygons FIRST, same X/Y transforms as price line
  for(let i=0;i<9;i++){let d='';samples.forEach((t,j)=>d+=(j?'L':'M')+X(t)+','+Y(model(t)*10**EDGES[i+1]));for(let j=samples.length-1;j>=0;j--)d+='L'+X(samples[j])+','+Y(model(samples[j])*10**EDGES[i]);d+='Z';E('path',{d,fill:BANDS[i][1],opacity:.88,stroke:'none'})}
  // Central model line
  let md='';samples.forEach((t,j)=>md+=(j?'L':'M')+X(t)+','+Y(model(t)));E('path',{d:md,fill:'none',stroke:'#ffffff','stroke-width':1,'stroke-dasharray':'4 5',opacity:.72});
  // BTC line ON TOP of rainbow
  let pd='';data.forEach((d,i)=>pd+=(i?'L':'M')+X(Date.parse(d.date+'T00:00:00Z'))+','+Y(d.price));E('path',{d:pd,fill:'none',stroke:'#111827','stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round'});
- data.forEach(d=>{const c=E('circle',{cx:X(Date.parse(d.date+'T00:00:00Z')),cy:Y(d.price),r:d.current?0:2.6,fill:'#111827',opacity:.9});if(!d.current){c.addEventListener('mousemove',ev=>showTip(ev,d));c.addEventListener('mouseleave',hideTip)}});
- const cx=X(currentMs),cy=Y(current.price);E('line',{x1:cx,y1:T,x2:cx,y2:H-BOT,stroke:'#111827','stroke-dasharray':'5 5',opacity:.42});const cp=E('circle',{cx,cy,r:9,fill:'#fff',stroke:'#111827','stroke-width':4});cp.addEventListener('mousemove',ev=>showTip(ev,current,true));cp.addEventListener('mouseleave',hideTip);const lab=E('text',{x:Math.min(cx+13,W-190),y:Math.max(cy-13,28),fill:'#111827','font-size':15,'font-weight':800});lab.textContent='현재 '+fmt(current.price);
- document.getElementById('count').textContent=data.length+'개'; updateStats();
+ data.forEach(d=>{const c=E('circle',{cx:X(Date.parse(d.date+'T00:00:00Z')),cy:Y(d.price),r:d.current?0:(mode==='monthly'?3.2:2.6),fill:'#111827',opacity:.9});if(!d.current){c.addEventListener('mousemove',ev=>showTip(ev,d));c.addEventListener('mouseleave',hideTip)}});
+ const cx=X(displayCurrentMs),cy=Y(current.price);E('line',{x1:cx,y1:T,x2:cx,y2:H-BOT,stroke:'#111827','stroke-dasharray':'5 5',opacity:.42});const cp=E('circle',{cx,cy,r:9,fill:'#fff',stroke:'#111827','stroke-width':4});cp.addEventListener('mousemove',ev=>showTip(ev,current,true));cp.addEventListener('mouseleave',hideTip);const lab=E('text',{x:Math.min(cx+13,W-190),y:Math.max(cy-13,28),fill:'#111827','font-size':15,'font-weight':800});lab.textContent='현재 '+fmt(current.price);
+ document.getElementById('count').textContent=data.length+'개 · '+(mode==='monthly'?'월봉':'가격선'); updateStats();
 }
-function showTip(ev,d,isCurrent=false){const t=document.getElementById('tip'),r=document.getElementById('chartWrap').getBoundingClientRect();t.innerHTML='<b>'+(isCurrent?'현재 위치':d.date)+'</b><br>'+fmt(d.price);t.style.left=(ev.clientX-r.left+12)+'px';t.style.top=(ev.clientY-r.top+12)+'px';t.style.display='block'}
+function showTip(ev,d,isCurrent=false){const t=document.getElementById('tip'),r=document.getElementById('chartWrap').getBoundingClientRect();t.innerHTML='<b>'+(isCurrent?'현재 위치':d.date)+'</b><br>'+fmt(d.price)+(d.estimated?'<br><span style="opacity:.75">월말 로그 보간값</span>':'');t.style.left=(ev.clientX-r.left+12)+'px';t.style.top=(ev.clientY-r.top+12)+'px';t.style.display='block'}
 function hideTip(){document.getElementById('tip').style.display='none'}
 function updateStats(){const b=bandInfo(current.price,Date.parse(current.date+'T00:00:00Z'));document.getElementById('price').textContent=fmt(current.price);document.getElementById('band').textContent=BANDS[b.i][0];document.getElementById('band').style.color=BANDS[b.i][1];document.getElementById('meaning').textContent=BANDS[b.i][2];document.getElementById('multiple').textContent=b.ratio.toFixed(2)+'×';document.getElementById('updated').textContent=current.source+' · '+current.date}
 async function getJSON(url,ms=7000){const c=new AbortController(),timer=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw Error(r.status);return await r.json()}finally{clearTimeout(timer)}}
 async function live(){const sources=[['Coinbase',async()=>Number((await getJSON('https://api.coinbase.com/v2/prices/BTC-USD/spot')).data.amount)],['Kraken',async()=>Number((await getJSON('https://api.kraken.com/0/public/Ticker?pair=XBTUSD')).result.XXBTZUSD.c[0])],['CoinGecko',async()=>Number((await getJSON('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd')).bitcoin.usd)]];for(const[s,f]of sources){try{const p=await f();if(Number.isFinite(p)&&p>0){current={date:new Date().toISOString().slice(0,10),price:p,source:s+' 실시간'};document.getElementById('status').textContent=s+' 실시간 가격 연결 성공 · 30초마다 갱신';draw();return}}catch(e){console.warn(s,e)}}document.getElementById('status').textContent='실시간 API 연결이 차단되어 내장 기준가격을 표시 중입니다. 차트 중첩 렌더링은 정상입니다.'}
 document.querySelectorAll('button[data-y]').forEach(b=>b.addEventListener('click',()=>{years=b.dataset.y;document.querySelectorAll('button[data-y]').forEach(x=>x.classList.toggle('active',x===b));draw()}));
+document.querySelectorAll('button[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;document.querySelectorAll('button[data-mode]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('status').textContent=mode==='monthly'?'월봉 모드: 내장 기준점 사이를 로그 보간한 월말 가격을 표시합니다.':'가격선 모드: 내장 기준점을 직접 연결합니다.';draw()}));
 const legend=document.getElementById('legend');const lk=document.createElement('span');lk.innerHTML='<i class="linekey"></i>BTC Price';legend.appendChild(lk);BANDS.slice().reverse().forEach(b=>{const s=document.createElement('span');s.innerHTML='<i style="background:'+b[1]+'"></i>'+b[0];legend.appendChild(s)});
 draw();live();setInterval(live,30000);window.addEventListener('resize',draw);
 </script>
