@@ -1,422 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bitcoin Rainbow Wave — Live</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#07070d;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
-.container{max-width:1480px;margin:0 auto;padding:16px}
-.header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;background:linear-gradient(135deg,#12122a,#0d1b2a);border-radius:16px;margin-bottom:16px;border:1px solid rgba(255,255,255,.06);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.header h1{font-size:26px;font-weight:800;background:linear-gradient(90deg,#f7931a,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.subtitle{font-size:12px;color:#666;margin-top:4px;letter-spacing:.5px}
-.price-box{text-align:right}
-.price-box .label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1.5px}
-.price-box .price{font-size:38px;font-weight:800;color:#00ff88;text-shadow:0 0 20px rgba(0,255,136,.25);transition:.3s}
-.price-box .change{font-size:14px;margin-top:4px;font-weight:600}
-.price-box .update{font-size:11px;color:#555;margin-top:6px}
-.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px;border:1px solid}
-#chart{width:100%;height:580px;background:#0a0a14;border-radius:16px;border:1px solid rgba(255,255,255,.05);margin-bottom:10px}
-#volChart{width:100%;height:130px;background:#0a0a14;border-radius:16px;border:1px solid rgba(255,255,255,.05)}
-.panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:14px}
-.card{background:#12122a;padding:16px;border-radius:14px;border:1px solid rgba(255,255,255,.05);transition:.2s}
-.card:hover{border-color:rgba(255,255,255,.12)}
-.card .lab{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px}
-.card .val{font-size:17px;font-weight:700;margin-top:6px;color:#f0f0f0}
-.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding:14px;background:#12122a;border-radius:14px;font-size:11px;border:1px solid rgba(255,255,255,.05)}
-.legend span{display:flex;align-items:center;gap:5px}
-.dot{width:12px;height:12px;border-radius:3px}
-.error-banner{background:#2a0a0a;border:1px solid #ff4444;color:#ff8888;padding:12px 20px;border-radius:12px;margin-bottom:14px;font-size:13px;display:none}
-.retry-btn{background:#ff4444;color:#fff;border:none;padding:6px 14px;border-radius:6px;margin-left:12px;cursor:pointer;font-size:12px}
-.retry-btn:hover{background:#ff6666}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090b10" />
+  <meta name="description" content="실시간 비트코인 가격과 장기 로그 회귀 레인보우 밴드를 함께 보는 대시보드" />
+  <title>Bitcoin Rainbow Cycle</title>
+  <link rel="preconnect" href="https://cdn.plot.ly" />
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-<div class="container">
-  <div class="error-banner" id="errorBanner">
-    ⚠️ 실시간 데이터 연결 실패. 내장 데이터로 표시 중입니다.
-    <button class="retry-btn" onclick="location.reload()">새로고침</button>
-  </div>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">LONG-TERM CYCLE DASHBOARD</p>
+        <h1>Bitcoin Rainbow Cycle</h1>
+        <p class="subtitle">비트코인의 전체 가격 이력과 로그 회귀 밴드, 현재 위치를 한 화면에서 확인합니다.</p>
+      </div>
+      <div class="live-badge"><span></span> LIVE</div>
+    </header>
 
-  <div class="header">
-    <div>
-      <h1>🌈 Bitcoin Rainbow Wave</h1>
-      <div class="subtitle">Logarithmic Regression + Technical Analysis Dashboard</div>
-    </div>
-    <div class="price-box">
-      <div class="label">Live BTC / USDT</div>
-      <div class="price" id="livePrice">---</div>
-      <div class="change" id="priceChange">--</div>
-      <div class="badge" id="currentBand">분석 중...</div>
-      <div class="update" id="updateTime">--</div>
-    </div>
-  </div>
+    <section class="stats" aria-label="현재 지표">
+      <article class="stat"><p>현재 BTC 가격</p><strong id="currentPrice">불러오는 중</strong><small id="priceUpdated">—</small></article>
+      <article class="stat"><p>현재 밴드</p><strong id="currentBand">계산 중</strong><small id="bandMeaning">—</small></article>
+      <article class="stat"><p>모델 대비 위치</p><strong id="modelMultiple">—</strong><small>기준 회귀선 대비 배수</small></article>
+      <article class="stat"><p>다음 반감기</p><strong id="nextHalving">예상 2028년</strong><small id="halvingCountdown">—</small></article>
+    </section>
 
-  <div id="chart"></div>
-  <div id="volChart"></div>
+    <section class="panel chart-panel">
+      <div class="panel-head">
+        <div>
+          <h2>장기 레인보우 차트</h2>
+          <p>가격 축은 로그 스케일입니다. 마우스로 확대·축소하고 구간을 드래그해 살펴보세요.</p>
+        </div>
+        <div class="controls">
+          <button data-range="all" class="active">전체</button>
+          <button data-range="10y">10년</button>
+          <button data-range="5y">5년</button>
+          <button data-range="2y">2년</button>
+          <button id="resetZoom">초기화</button>
+        </div>
+      </div>
+      <div id="chart" role="img" aria-label="비트코인 가격과 레인보우 밴드 차트"></div>
+      <div id="dataWarning" class="warning hidden"></div>
+    </section>
 
-  <div class="panel">
-    <div class="card"><div class="lab">채널</div><div class="val" id="chType">--</div></div>
-    <div class="card"><div class="lab">저항선</div><div class="val" id="resVal">--</div></div>
-    <div class="card"><div class="lab">지지선</div><div class="val" id="supVal">--</div></div>
-    <div class="card"><div class="lab">MA20</div><div class="val" id="ma20v">--</div></div>
-    <div class="card"><div class="lab">MA50</div><div class="val" id="ma50v">--</div></div>
-    <div class="card"><div class="lab">MA200</div><div class="val" id="ma200v">--</div></div>
-    <div class="card"><div class="lab">24h 고가</div><div class="val" id="h24">--</div></div>
-    <div class="card"><div class="lab">24h 저가</div><div class="val" id="l24">--</div></div>
-  </div>
+    <section class="grid-2">
+      <article class="panel">
+        <h2>밴드 해석</h2>
+        <div id="legend" class="legend"></div>
+      </article>
+      <article class="panel methodology">
+        <h2>모델과 데이터</h2>
+        <p><b>기준선:</b> 비트코인 초기 이후 경과 주(week)에 대한 로그 회귀식.</p>
+        <code>10^(3.109106 × ln(weeks since 2009-01-09) − 8.164198)</code>
+        <p><b>밴드:</b> 기준선에 로그 간격의 고정 배수를 적용합니다. 공식과 배수는 <code>assets/app.js</code>에서 수정할 수 있습니다.</p>
+        <p><b>과거 가격:</b> GitHub Actions가 일별 종가 데이터를 갱신해 저장합니다. <b>현재 가격:</b> 공개 시세 API를 30초마다 조회합니다.</p>
+        <p class="disclaimer">이 차트는 장기 사이클을 시각화하는 참고 도구이며, 미래 가격을 보장하거나 투자 판단을 대신하지 않습니다.</p>
+      </article>
+    </section>
 
-  <div class="legend">
-    <span><div class="dot" style="background:#f7931a"></div>BTC 가격</span>
-    <span><div class="dot" style="background:#00d4ff"></div>MA20</span>
-    <span><div class="dot" style="background:#ff6b6b"></div>MA50</span>
-    <span><div class="dot" style="background:#a855f7"></div>MA200</span>
-    <span><div class="dot" style="background:#ff4444"></div>저항선(고점)</span>
-    <span><div class="dot" style="background:#44ff44"></div>지지선(저점)</span>
-    <span><div class="dot" style="background:#ff0000;border:1px solid #fff"></div>▼ 고점</span>
-    <span><div class="dot" style="background:#00ff00;border:1px solid #fff"></div>▲ 저점</span>
-    <span><div class="dot" style="background:#f7931a;border:2px solid #fff"></div>● 현재가</span>
-  </div>
-</div>
+    <footer>Open-source dashboard · Data sources and update status are displayed in the chart tooltip.</footer>
+  </main>
 
-<script>
-// ====== CONFIG ======
-const GENESIS = new Date('2009-01-03');
-const REG_A = 21.016067, REG_B = -4.473784;
-const PROXIES = [
-  'https://corsproxy.io/?',
-  'https://api.allorigins.win/raw?url=',
-  'https://api.codetabs.com/v1/proxy?quest='
-];
-const BAND_CFG = [
-  {off:2.8,  color:'#7F00FF', name:'Maximum Bubble'},
-  {off:2.2,  color:'#0000FF', name:'Sell. Seriously'},
-  {off:1.8,  color:'#00BFFF', name:'FOMO Intensifies'},
-  {off:1.4,  color:'#00FF00', name:'Is this a bubble?'},
-  {off:1.0,  color:'#FFFF00', name:'HODL!'},
-  {off:0.6,  color:'#FFA500', name:'Still Cheap'},
-  {off:0.2,  color:'#FF4500', name:'Accumulate'},
-  {off:-0.2, color:'#FF0000', name:'Fire Sale'},
-  {off:-0.6, color:'#8B0000', name:'Buy!'}
-];
-
-let chart, volChart, histData = [], livePrice = 0, proxyIdx = 0, retryCount = 0;
-
-// ====== UTILS ======
-function fmt$(v) {
-  return '$' + v.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-}
-function getDays(t) { return (t - GENESIS.getTime()) / 86400000; }
-function regPrice(days) { return Math.pow(10, REG_A + REG_B * Math.log10(days)); }
-
-// ====== API FETCH WITH PROXY ROTATION ======
-async function fetchJSON(url) {
-  for (let i = 0; i < PROXIES.length; i++) {
-    const p = PROXIES[(proxyIdx + i) % PROXIES.length];
-    try {
-      const r = await fetch(p + encodeURIComponent(url), {mode: 'cors', cache: 'no-store'});
-      if (!r.ok) continue;
-      const d = await r.json();
-      proxyIdx = (proxyIdx + i) % PROXIES.length;
-      return d;
-    } catch(e) {}
-  }
-  return null;
-}
-
-// ====== LOAD DATA ======
-async function loadAll() {
-  document.getElementById('updateTime').textContent = '데이터 로딩 중...';
-
-  // 1. Historical klines
-  const klines = await fetchJSON('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=1000');
-  if (!klines) {
-    if (retryCount++ < 3) {
-      setTimeout(loadAll, 3000);
-      return;
-    }
-    document.getElementById('errorBanner').style.display = 'block';
-    document.getElementById('updateTime').textContent = '연결 실패';
-    return;
-  }
-
-  histData = klines.map(d => ({
-    time: d[0], open: +d[1], high: +d[2], low: +d[3], close: +d[4], vol: +d[5]
-  }));
-
-  // 2. Live ticker
-  await updateTicker();
-
-  // 3. Render
-  analyzeAndRender();
-
-  // 4. Schedule live updates
-  setInterval(async () => {
-    await updateTicker();
-    refreshLivePoint();
-  }, 30000);
-}
-
-async function updateTicker() {
-  const t = await fetchJSON('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
-  if (!t) return;
-  livePrice = +t.lastPrice;
-
-  document.getElementById('livePrice').textContent = fmt$(livePrice);
-  const chg = (+t.priceChangePercent).toFixed(2);
-  const el = document.getElementById('priceChange');
-  el.textContent = (chg >= 0 ? '+' : '') + chg + '%';
-  el.style.color = chg >= 0 ? '#00ff88' : '#ff4757';
-
-  document.getElementById('h24').textContent = fmt$(+t.highPrice);
-  document.getElementById('l24').textContent = fmt$(+t.lowPrice);
-  document.getElementById('updateTime').textContent = 'Updated: ' + new Date().toLocaleTimeString();
-
-  // Determine band
-  const days = getDays(Date.now());
-  const reg = regPrice(days);
-  let band = BAND_CFG[BAND_CFG.length - 1];
-  for (let b of BAND_CFG) {
-    if (livePrice / reg >= Math.pow(10, b.off - 1.1)) { band = b; break; }
-  }
-  const bel = document.getElementById('currentBand');
-  bel.textContent = band.name;
-  bel.style.background = band.color + '22';
-  bel.style.color = band.color;
-  bel.style.borderColor = band.color;
-}
-
-// ====== TECHNICAL ANALYSIS ======
-function analyzeAndRender() {
-  const closes = histData.map(d => [d.time, d.close]);
-  const n = closes.length;
-
-  // --- Peaks & Troughs ---
-  const peaks = [], troughs = [], dist = 20;
-  for (let i = dist; i < n - dist; i++) {
-    let isP = true, isT = true;
-    for (let j = 1; j <= dist; j++) {
-      if (closes[i][1] <= closes[i-j][1] || closes[i][1] <= closes[i+j][1]) isP = false;
-      if (closes[i][1] >= closes[i-j][1] || closes[i][1] >= closes[i+j][1]) isT = false;
-    }
-    if (isP) peaks.push([...closes[i]]);
-    if (isT) troughs.push([...closes[i]]);
-  }
-
-  // --- Linear Regression (log scale) ---
-  function linReg(pts) {
-    const base = closes[0][0];
-    const xs = pts.map(p => (p[0] - base) / 86400000);
-    const ys = pts.map(p => Math.log(p[1]));
-    const mx = xs.reduce((a,b)=>a+b,0)/xs.length;
-    const my = ys.reduce((a,b)=>a+b,0)/ys.length;
-    let num = 0, den = 0;
-    for (let i = 0; i < xs.length; i++) {
-      num += (xs[i]-mx)*(ys[i]-my);
-      den += (xs[i]-mx)**2;
-    }
-    const slope = num/den, intercept = my - slope*mx;
-    return {slope, intercept, base};
-  }
-
-  const pReg = linReg(peaks.slice(-10));
-  const tReg = linReg(troughs.slice(-10));
-
-  // --- Trendlines ---
-  const startT = closes[0][0];
-  const endT = closes[closes.length-1][0] + 200*86400000;
-  const resLine = [], supLine = [];
-  for (let t = startT; t <= endT; t += 7*86400000) {
-    const day = (t - closes[0][0]) / 86400000;
-    resLine.push([t, Math.exp(pReg.intercept + pReg.slope * day)]);
-    supLine.push([t, Math.exp(tReg.intercept + tReg.slope * day)]);
-  }
-
-  // --- Channel Type ---
-  const lastDay = (closes[closes.length-1][0] - closes[0][0]) / 86400000;
-  const curRes = Math.exp(pReg.intercept + pReg.slope * lastDay);
-  const curSup = Math.exp(tReg.intercept + tReg.slope * lastDay);
-
-  const chType = (pReg.slope > 0.0001 && tReg.slope > 0.0001) ? '📈 상승 채널' :
-                 (pReg.slope < -0.0001 && tReg.slope < -0.0001) ? '📉 하락 채널' : '↔️ 횡보';
-  document.getElementById('chType').textContent = chType;
-  document.getElementById('resVal').textContent = fmt$(curRes);
-  document.getElementById('supVal').textContent = fmt$(curSup);
-
-  // --- Moving Averages ---
-  function sma(arr, per) {
-    return arr.map((v,i) => {
-      if (i < per-1) return null;
-      const s = arr.slice(i-per+1, i+1).reduce((a,b)=>a+b[1], 0);
-      return [v[0], s/per];
-    }).filter(x=>x);
-  }
-  const ma20 = sma(closes, 20);
-  const ma50 = sma(closes, 50);
-  const ma200 = sma(closes, 200);
-  if (ma20.length) document.getElementById('ma20v').textContent = fmt$(ma20[ma20.length-1][1]);
-  if (ma50.length) document.getElementById('ma50v').textContent = fmt$(ma50[ma50.length-1][1]);
-  if (ma200.length) document.getElementById('ma200v').textContent = fmt$(ma200[ma200.length-1][1]);
-
-  // --- Fibonacci ---
-  const recent = closes.slice(-200);
-  const hi = Math.max(...recent.map(d=>d[1]));
-  const lo = Math.min(...recent.map(d=>d[1]));
-  const diff = hi - lo;
-
-  // --- Rainbow Bands ---
-  const rbDates = [];
-  const rStart = closes[0][0] - 365*86400000;
-  const rEnd = closes[closes.length-1][0] + 365*86400000;
-  for (let t = rStart; t <= rEnd; t += 7*86400000) rbDates.push(t);
-
-  const rbSeries = [];
-  for (let i = 0; i < BAND_CFG.length - 1; i++) {
-    const up = rbDates.map(t => {
-      const d = getDays(t);
-      return [t, regPrice(d) * Math.pow(10, BAND_CFG[i].off)];
-    });
-    const dn = rbDates.map(t => {
-      const d = getDays(t);
-      return [t, regPrice(d) * Math.pow(10, BAND_CFG[i+1].off)];
-    });
-    rbSeries.push({
-      type: 'line', data: up, lineStyle: {width: 0},
-      areaStyle: {color: BAND_CFG[i].color, opacity: 0.18},
-      symbol: 'none', silent: true
-    });
-    rbSeries.push({
-      type: 'line', data: dn, lineStyle: {width: 0},
-      symbol: 'none', silent: true
-    });
-  }
-
-  // --- Main Chart ---
-  chart = echarts.init(document.getElementById('chart'), 'dark');
-
-  // Add live point to price series
-  const priceSeries = [...closes, [Date.now(), livePrice]];
-
-  const series = [
-    ...rbSeries,
-    {name: '저항선', type: 'line', data: resLine, lineStyle: {color: '#ff4444', width: 1.5, type: 'dashed'}, symbol: 'none'},
-    {name: '지지선', type: 'line', data: supLine, lineStyle: {color: '#44ff44', width: 1.5, type: 'dashed'}, symbol: 'none'},
-    {name: 'MA20', type: 'line', data: ma20, lineStyle: {color: '#00d4ff', width: 1}, symbol: 'none'},
-    {name: 'MA50', type: 'line', data: ma50, lineStyle: {color: '#ff6b6b', width: 1}, symbol: 'none'},
-    {name: 'MA200', type: 'line', data: ma200, lineStyle: {color: '#a855f7', width: 1.3}, symbol: 'none'},
-    {name: 'BTC', type: 'line', data: priceSeries, lineStyle: {color: '#f7931a', width: 2.2}, symbol: 'none', z: 5},
-    {name: '고점', type: 'scatter', data: peaks, itemStyle: {color: '#ff0000'}, symbol: 'triangle', symbolSize: 11, z: 6},
-    {name: '저점', type: 'scatter', data: troughs, itemStyle: {color: '#00ff00'}, symbol: 'triangle', symbolRotate: 180, symbolSize: 11, z: 6},
-    {name: '현재가', type: 'scatter', data: [[Date.now(), livePrice]], symbolSize: 18,
-      itemStyle: {color: '#f7931a', borderColor: '#fff', borderWidth: 2.5, shadowBlur: 20, shadowColor: '#f7931a'},
-      label: {show: true, position: 'top', formatter: p => fmt$(p.value[1]), color: '#f7931a', fontWeight: 'bold', fontSize: 14},
-      z: 10
-    }
-  ];
-
-  // Fibonacci horizontal lines
-  [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1].forEach(l => {
-    series.push({
-      type: 'line',
-      markLine: {
-        silent: true, symbol: 'none',
-        lineStyle: {color: '#666', type: 'dotted', opacity: 0.4},
-        data: [{yAxis: hi - l*diff}],
-        label: {formatter: 'Fib ' + (l*100).toFixed(1) + '%', color: '#888', fontSize: 9, position: 'insideEndTop'}
-      }
-    });
-  });
-
-  chart.setOption({
-    backgroundColor: 'transparent',
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: 'rgba(8,8,18,0.95)',
-      borderColor: '#333',
-      textStyle: {color: '#ddd'},
-      formatter: function(params) {
-        const date = new Date(params[0].axisValue).toLocaleDateString('ko-KR');
-        let s = `<div style="font-weight:bold;margin-bottom:6px">${date}</div>`;
-        params.forEach(p => {
-          if (['BTC','현재가','고점','저점'].includes(p.seriesName)) {
-            s += `<div style="color:${p.color}">● ${p.seriesName}: <b>${fmt$(p.value[1])}</b></div>`;
-          }
-        });
-        return s;
-      }
-    },
-    grid: {left: '3%', right: '5%', bottom: '14%', top: '8%', containLabel: true},
-    xAxis: {
-      type: 'time',
-      axisLine: {lineStyle: {color: '#2a2a3a'}},
-      axisLabel: {color: '#888', formatter: '{yyyy}-{MM}'},
-      splitLine: {show: false}
-    },
-    yAxis: {
-      type: 'log',
-      min: 8000,
-      max: 600000,
-      axisLine: {lineStyle: {color: '#2a2a3a'}},
-      axisLabel: {color: '#888', formatter: v => v >= 1000 ? '$' + (v/1000).toFixed(0) + 'K' : '$' + v},
-      splitLine: {lineStyle: {color: '#151520'}}
-    },
-    dataZoom: [
-      {type: 'inside', start: 40, end: 100},
-      {type: 'slider', start: 40, end: 100, bottom: 10, height: 22, borderColor: '#2a2a3a', fillerColor: 'rgba(247,147,26,0.15)'}
-    ],
-    series: series
-  });
-
-  // --- Volume Chart ---
-  volChart = echarts.init(document.getElementById('volChart'), 'dark');
-  volChart.setOption({
-    backgroundColor: 'transparent',
-    grid: {left: '3%', right: '5%', bottom: '10%', top: '12%', containLabel: true},
-    xAxis: {
-      type: 'time',
-      axisLine: {lineStyle: {color: '#2a2a3a'}},
-      axisLabel: {color: '#888'},
-      splitLine: {show: false}
-    },
-    yAxis: {
-      type: 'value',
-      axisLine: {lineStyle: {color: '#2a2a3a'}},
-      axisLabel: {color: '#888', formatter: v => v >= 1000 ? (v/1000).toFixed(0) + 'K' : v},
-      splitLine: {lineStyle: {color: '#151520'}}
-    },
-    dataZoom: [
-      {type: 'inside', start: 40, end: 100},
-      {type: 'slider', start: 40, end: 100, bottom: 5, height: 15, show: false}
-    ],
-    series: [{
-      type: 'bar',
-      data: histData.map(d => [d.time, d.vol]),
-      itemStyle: {color: '#f7931a', opacity: 0.35}
-    }]
-  });
-}
-
-// ====== LIVE POINT UPDATE ======
-function refreshLivePoint() {
-  if (!chart || !histData.length) return;
-  const priceSeries = histData.map(d => [d.time, d.close]);
-  priceSeries.push([Date.now(), livePrice]);
-  chart.setOption({
-    series: [
-      {name: 'BTC', data: priceSeries},
-      {name: '현재가', data: [[Date.now(), livePrice]]}
-    ]
-  });
-}
-
-// ====== INIT ======
-window.addEventListener('resize', () => {
-  if (chart) chart.resize();
-  if (volChart) volChart.resize();
-});
-loadAll();
-</script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="assets/app.js" defer></script>
 </body>
 </html>
